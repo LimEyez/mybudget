@@ -1,0 +1,1 @@
+export type StandartDateFormat = `${number}-${number}-${number}`
