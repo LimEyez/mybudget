@@ -163,13 +163,13 @@ function TicketScreen({ route }: { route: any }) {
     }
 
     async function getTicketInfo() {
-        const ticketInfo = await DB.getTicketInfo(Number(id));
-        if (ticketInfo != null) {
-            setTicketInfo({ name: ticketInfo?.name, date: format(new Date(ticketInfo?.date), "yyyy-MM-dd"), amount: ticketInfo?.amount });
-            if (ticketInfo.name) {
-                navigation.setOptions({ title: ticketInfo.name })
+        const DBticketInfo = await DB.getTicketInfo(Number(id));
+        if (DBticketInfo != null) {
+            setTicketInfo({ name: DBticketInfo?.name, date: format(new Date(DBticketInfo?.date), "yyyy-MM-dd"), amount: DBticketInfo?.amount });
+            if (DBticketInfo.name) {
+                navigation.setOptions({ title: DBticketInfo.name })
             } else {
-                navigation.setOptions({ title: `Чек от ${format(new Date(ticketInfo.date), "dd.MM.yyyy")}` })
+                navigation.setOptions({ title: `Чек от ${format(new Date(DBticketInfo.date), "dd.MM.yyyy")}` })
             }
         };
     }
@@ -186,6 +186,7 @@ function TicketScreen({ route }: { route: any }) {
         await DB.updateAmountticket({ ticketId: Number(id) });
         await getTicketInfo();
         await getProducts();
+        dispatch(fetchTickets({ dates, DB }));
     }
 
     const renderItem = useCallback(({ item, index }: { item: Product, index: number }) => {
@@ -216,11 +217,11 @@ function TicketScreen({ route }: { route: any }) {
 
                         <View style={[styles.containerNameAmount]}>
                             <Text style={[styles.textName, BasicStyles.fontSemiBold]}>{item.name}</Text>
-                            <Text style={[styles.textAmountProduct, BasicStyles.fontSemiBold]}>{Number(item.amount.toFixed(2))}₽</Text>
+                            <Text style={[styles.textAmountProduct, BasicStyles.fontSemiBold]}>{parseFloat(item.amount.toFixed(2))}₽</Text>
                         </View>
                         <View style={[styles.containerQuantityPrice]}>
                             <Text style={[styles.textQuantityPrice, BasicStyles.fontSemiBold]}>
-                                {Number(item.quantity.toFixed(3))} × {Number(item.price.toFixed(2))}₽
+                                {parseFloat(item.quantity.toFixed(3))} × {parseFloat(item.price.toFixed(2))}₽
                             </Text>
                         </View>
                     </RectButton>
@@ -253,15 +254,15 @@ function TicketScreen({ route }: { route: any }) {
                 await getTicketInfo();
         
                 // Выключаем индикатор загрузки после завершения всех операций
-                setTimeout(() => {
+                // setTimeout(() => {
                     setLoading(false); // Выключаем индикатор загрузки в случае ошибки
-                }, 1000)
+                // }, 1000)
             } catch (error) {
                 // Обработка ошибок, если что-то пошло не так
                 console.error("Ошибка при загрузке данных:", error);
-                setTimeout(() => {
-                    setLoading(false); // Выключаем индикатор загрузки в случае ошибки
-                }, 500)
+                // setTimeout(() => {
+                setLoading(false); // Выключаем индикатор загрузки в случае ошибки
+                // }, 500)
             }
         }
         
@@ -311,7 +312,7 @@ function TicketScreen({ route }: { route: any }) {
                     style={[BasicStyles.shadowElements, BasicStyles.border, styles.amountContainer]}
                 >
                     <View style={styles.containerText}>
-                        <Text style={[styles.textSum, BasicStyles.fontSemiBold]}>{ticketInfo.amount.toFixed(2)}₽</Text>
+                        <Text style={[styles.textSum, BasicStyles.fontSemiBold]}>{parseFloat(ticketInfo.amount.toFixed(2))}₽</Text>
                     </View>
                     <View style={styles.containerText}>
                         <Text style={[styles.textDate, BasicStyles.fontSemiBold]}>
@@ -347,7 +348,7 @@ function TicketScreen({ route }: { route: any }) {
                             showProductSettings={showProductSettings}
                             setShowProductSettings={(value: boolean) => { setShowProductSettings(value) }}
                             infoProduct={infoChangeableTicket ? infoChangeableTicket : { ticketId: -1, id: 0, name: "", quantity: 1, price: 0, amount: 0 }}
-                            updateProductsListAndTicketInfo={() => { getProducts(); getTicketInfo() }}
+                            updateProductsListAndTicketInfo={async () => { await getProducts(); await getTicketInfo() }}
                             resetInfo={() => resetInfoChangeableTicket()}
                         />
         </GestureHandlerRootView>

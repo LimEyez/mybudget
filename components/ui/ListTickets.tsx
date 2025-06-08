@@ -1,7 +1,7 @@
 
-import { StyleSheet, View } from "react-native";
+import { Easing, Keyboard, StyleSheet, View } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import InfoOfDateRange from "./InfoOfDateRange";
 
 import { Colors } from "@/constants/Сolors";
@@ -15,6 +15,7 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { fetchTickets } from "@/redux/ticketsSlice";
 import { ScrollView } from "react-native-gesture-handler";
 import LoadingModal from "./LoadingModal";
+import { useFocusEffect } from "expo-router";
 
 interface ListTicketsInterface {
     snapPoints: (number | string)[],
@@ -76,10 +77,33 @@ export default function ListTickets({ snapPoints, openDatePickerRange }: ListTic
         }
     }, [dates]);
 
+    useFocusEffect(
+        useCallback(() => {
+          // Сначала закрываем клавиатуру
+          Keyboard.dismiss();
+          bottomSheetRef.current?.snapToIndex(0);      
+        //   // Затем через таймер выдвигаем BottomSheet
+
+        //   const timeout = setTimeout(() => {
+        //     bottomSheetRef.current?.snapToIndex(0);
+        //   }, 300); // меньше задержка — меньше подергиваний
+      
+          return () => {
+            // clearTimeout(timeout);
+            bottomSheetRef.current?.close();
+          };
+        }, [])
+      );
 
     return (
         <BottomSheet
             ref={bottomSheetRef}
+            keyboardBehavior="interactive"
+            animationConfigs={{
+                damping: 16,
+                // mass: 5
+
+            }}
             snapPoints={snapPoints}
             index={0}
             enablePanDownToClose={false}

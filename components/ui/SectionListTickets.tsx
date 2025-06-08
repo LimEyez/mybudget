@@ -7,7 +7,7 @@ import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, SectionList, StyleSheet, Text, View } from "react-native";
 import DateContainer from "./Separator";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import SwipeableElement from "./SwipeableElement";
 import { RectButton } from "react-native-gesture-handler";
 import DataBase from "@/services/DataBase";
@@ -41,7 +41,7 @@ export default function SectionListTickets() {
   const dispatch = useDispatch<AppDispatch>();
 
   const grupedTickets = (tickets: Ticket[]): SectionsTickets[] => {
-    return tickets.reduce((acc: SectionsTickets[], item) => {
+    const grupedticketsArr = tickets.reduce((acc: SectionsTickets[], item) => {
       const existingEntry = acc.find((entry: SectionsTickets) => entry.title === format(new Date(item.date), "dd.MM.yyyy"));
       if (existingEntry) {
         // Если дата уже существует, добавляем чек в массив data
@@ -55,6 +55,12 @@ export default function SectionListTickets() {
       }
       return acc;
     }, []);
+
+    return grupedticketsArr.sort((a, b) => {
+      const dateA = parse(a.title, "dd.MM.yyyy", new Date());
+      const dateB = parse(b.title, "dd.MM.yyyy", new Date());
+      return dateB.getTime() - dateA.getTime();
+    });
   }
 
   const sections = useMemo(() => grupedTickets(ticketsMemo), [ticketsMemo]);
@@ -121,15 +127,15 @@ export default function SectionListTickets() {
     ),
     []
   );
-
+  
   const renderItem = useCallback(({ item, index }: { item: Ticket, index: number }) => {
 
     const delay = 50 + 50 * index
 
-    async function deleteTicket() {
+    const deleteTicket = useCallback(async () => {
       await DB.deleteTicket(item.id);
       dispatch(fetchTickets({ dates, DB }));
-    }
+    }, [dates])
 
     return (
       <Animated.View
@@ -149,12 +155,12 @@ export default function SectionListTickets() {
             onPress={() => { router.push({ pathname: '/ticket/[id]', params: { id: item.id, name: item.name, date: item.date } }) }}
           >
             <Text style={[styles.textName, BasicStyles.fontSemiBold]}>{item.name != '' ? item.name : `Чек от ${getFormatedDate(item.date)}`}</Text>
-            <Text style={[styles.textSum, BasicStyles.fontSemiBold]}>-{item.amount}₽</Text>
+            <Text style={[styles.textSum, BasicStyles.fontSemiBold]}>-{parseFloat(item.amount.toFixed(2))}₽</Text>
           </RectButton>
         </SwipeableElement>
       </Animated.View>
     )
-  }, [])
+  }, [dates])
 
 
 

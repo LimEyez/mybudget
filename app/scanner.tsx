@@ -1,8 +1,11 @@
-import { AppState, Dimensions, SafeAreaView, StatusBar, StyleSheet, TouchableOpacity, Text, Modal, View, Button } from "react-native";
+import { AppState, Dimensions, SafeAreaView, StatusBar, StyleSheet, 
+    TouchableOpacity, Text, Modal, View, Button } from "react-native";
 import { OverlayCamera } from "@/components/ui/OverlayCamera";
 import { useEffect, useRef, useState } from "react";
 import { useHeaderHeight } from "@react-navigation/elements";
-import Animated, { Easing, FadeIn, FadeInDown, FadeInUp, FadeOut, FadeOutDown, LinearTransition, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, ZoomIn, ZoomOut } from "react-native-reanimated";
+import Animated, { Easing, FadeIn, FadeInDown, FadeInUp, FadeOut, FadeOutDown, LinearTransition, 
+    useAnimatedStyle, useDerivedValue, useSharedValue, withTiming, 
+    ZoomIn, ZoomOut } from "react-native-reanimated";
 import { GestureHandlerRootView, RectButton } from "react-native-gesture-handler";
 import LoadingModal from "@/components/ui/LoadingModal";
 import { LoaderTicketInfo } from "@/services/LoaderTicketInfo";
@@ -20,7 +23,7 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { fetchTickets } from "@/redux/ticketsSlice";
 import * as ImagePicker from 'expo-image-picker';
 import * as RNQRGenerator from 'rn-qr-generator';
-import FlashLightIcon from "@/components/ui/FlashLight";
+import FlashLightIcon from "@/components/ui/FlashLightIcon";
 import PhotoLibraryImage from "@/components/ui/PhotoLibraryImage";
 import BasicStyles from "@/styles/BasicStyles";
 
@@ -31,29 +34,21 @@ export default function Scanner() {
     const tokenQr = useRef<string | null>(null);
     const lastScanTime = useRef<number | null>(null); // Последнее время сканирования
     const refModalMessage = useRef<ModalMessageInterface>(null);
-
     const loader = new LoaderTicketInfo();
-
     const [cameraSize, setCameraSize] = useState({ width: 0, height: 0 });
     const [qrDetected, setQrDetected] = useState(false);
     const [showLoader, setShowLoader] = useState(false);
     const [pressedReqButton, setPressedReqButton] = useState(false);
     const [flashStatus, setFlashStatus] = useState(false);
-
     const [permission, requestPermission] = useCameraPermissions();
-
     const DB = new DataBase(useSQLiteContext());
-
     const router = useRouter();
-
     const dispatch = useDispatch<AppDispatch>();
-
     const { dates } = useSelector((state: RootState) => state.dates);
-
     const opacityLoader = useSharedValue(0);
-
-    const loadingScreenAnimatedStyle = useAnimatedStyle(() => { return { opacity: withTiming(opacityLoader?.value, { duration: 300 }) } })
-
+    const loadingScreenAnimatedStyle = useAnimatedStyle(() => { return { 
+        opacity: withTiming(opacityLoader?.value, { duration: 300 }) } 
+    })
     const pickerFunction = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
@@ -139,7 +134,8 @@ export default function Scanner() {
 
         const newTicketId = await DB.addTicket(nameShop, date, 0);
 
-        async function addProduct(newTicketId: number, name: string, quantity: number, price: number, amount: number) {
+        async function addProduct(newTicketId: number, name: string, 
+            quantity: number, price: number, amount: number) {
             await DB.addProduct(newTicketId, name, quantity, price, amount)
         }
 
@@ -292,7 +288,10 @@ export default function Scanner() {
         return (
             <GestureHandlerRootView>
                 <View style={[StyleSheet.absoluteFill, styles.requestPermissionContainer]}>
-                    <RectButton onPress={requestPermission} style={[BasicStyles.border, BasicStyles.shadowElements, styles.requestPermissionbutton]}>
+                    <RectButton onPress={requestPermission} style={[
+                        BasicStyles.border, 
+                        BasicStyles.shadowElements, 
+                        styles.requestPermissionbutton]}>
                         <Text style={[{color: Colors.white}, BasicStyles.fontSemiBold]}>
                             Разрешить доступ к камере
                         </Text>
@@ -354,14 +353,12 @@ export default function Scanner() {
 
                 {
                     <ModalMessage
-                        text="Ошибка получения чека. Проверьте подключение к интернету"
+                        text="Ошибка при получении чека."
                         backgroundColor={Colors.red}
                         ref={refModalMessage}
                     >
                     </ModalMessage>
                 }
-
-
             </GestureHandlerRootView>
         );
     }

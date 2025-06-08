@@ -21,7 +21,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   }
 }
 
-rootProject.name = 'mybudget_ver2'
+rootProject.name = 'МойБюджет'
 
 dependencyResolutionManagement {
   versionCatalogs {

@@ -9,6 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/redux/store";
 import { setDates } from "@/redux/datesSlice";
+import { parse } from "date-fns";
 
 interface DatePickerRangeInterface {
     setShowDatePickerRange: (value: boolean) => void,
@@ -31,7 +32,7 @@ export default function DatePickerRange({ setShowDatePickerRange, showDatePicker
             dispatch(setDates({
                 startDate: output.startDateString,
                 endDate: output.endDateString
-            }))
+            }));
             // setDates({ startDate: output.startDateString, endDate: output.endDateString: output.endDateString })
         }
     };
@@ -96,26 +97,32 @@ export default function DatePickerRange({ setShowDatePickerRange, showDatePicker
         changeYearModalColor: Colors.blue
     }
 
-    
+
 
     return (
-        <GestureHandlerRootView style={{backgroundColor: "#000000"}}>
-            <Modal onRequestClose={onCancelRange} statusBarTranslucent={true} transparent={true} style={styles.modalContainer} animationType="fade" visible={showDatePickerRange}>
-                <TouchableWithoutFeedback onPress={onCancelRange}>
+        <GestureHandlerRootView style={{ backgroundColor: "#000000" }}>
+            <Modal
+                onRequestClose={onCancelRange}
+                statusBarTranslucent={true}
+                transparent={true}
+                style={styles.modalContainer}
+                animationType="fade"
+                visible={showDatePickerRange}>
+                {/* <TouchableWithoutFeedback onPress={onCancelRange}> */}
                 <View style={styles.modalContentContainer}>
-                <DatePicker
-                    isVisible={showDatePickerRange}
-                    mode={'range'}
-                    onCancel={onCancelRange}
-                    onConfirm={onConfirmRange}
-                    startDate={new Date(dates.startDate)}
-                    endDate={new Date(dates.endDate)}
-                    customLanguageConfig={languageSetting}
-                    colorOptions={colorOptions}
-                    withoutModal={true}
-                />
+                    <DatePicker
+                        isVisible={showDatePickerRange}
+                        mode={'range'}
+                        onCancel={onCancelRange}
+                        onConfirm={onConfirmRange}
+                        startDate={parse(dates.startDate, "yyyy-MM-dd", new Date())}
+                        endDate={parse(dates.endDate, "yyyy-MM-dd", new Date())}
+                        customLanguageConfig={languageSetting}
+                        colorOptions={colorOptions}
+                        withoutModal={true}
+                    />
                 </View>
-                </TouchableWithoutFeedback>
+                {/* </TouchableWithoutFeedback> */}
             </Modal>
         </GestureHandlerRootView>
     )

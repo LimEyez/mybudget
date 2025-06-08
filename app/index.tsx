@@ -1,4 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
+import { registerRootComponent } from "expo"
+import { AppRegistry } from "react-native";
 import { SafeAreaView, StyleSheet, View, LayoutChangeEvent, Modal, Text, Button } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import InfoByMonth from "../components/ui/InfoByMonth";
@@ -14,10 +16,15 @@ import DataBase from "@/services/DataBase";
 import { useSQLiteContext } from "expo-sqlite";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+// registerRootComponent(Index)
+
 export default function Index() {
   const [contentHeight, setContentHeight] = useState(0); // Храним высоту контента
   const [containerHeight, setContainerHeight] = useState(0); // Храним высоту mainContainer
+  const [hasMeasuredContainer, setHasMeasuredContainer] = useState(false);
+  const [hasMeasuredContent, setHasMeasuredContent] = useState(false);
 
+  // console.log(contentHeight, containerHeight)
   const refMainContainer = useRef<SafeAreaView>(null);
 
   const DB = new DataBase(useSQLiteContext());
@@ -26,29 +33,43 @@ export default function Index() {
 
   // Обработчик layout для получения высоты mainContainer
   const handleLayoutContainer = (event: LayoutChangeEvent) => {
-    const { height } = event.nativeEvent.layout;
-    setContainerHeight(height); // Сохраняем высоту контейнера
+    if (!hasMeasuredContainer) {
+      const { height } = event.nativeEvent.layout;
+      setContainerHeight(height);
+      setHasMeasuredContainer(true);
+    }
   };
-
-  // Обработчик layout для получения высоты контента
+    // Обработчик layout для получения высоты контента
   const handleLayoutContent = (event: LayoutChangeEvent) => {
-    const { height } = event.nativeEvent.layout;
-    setContentHeight(height); // Сохраняем высоту контента
+    if (!hasMeasuredContent) {
+      const { height } = event.nativeEvent.layout;
+      setContentHeight(height);
+      setHasMeasuredContent(true);
+    }
   };
 
   const [showDatePickerRange, setShowDatePickerRange] = useState(false)
 
+  //Функция изменения state для отображения окна настройки промежутка дат списка чеков
   const openDatePickerRange = () => {
     setShowDatePickerRange(true);
   }
 
   // const routeNewTicket = () => { router.push({ pathname: '/ticket/[id]', params: { id: "0", name: '', date: "" } }) };
 
+  //Функция для создания нового чека и открытия экрана его просмотра
   const routeNewTicket = () => {
     const addTicketFunc = async () => {
       const newTicketId = await DB.addTicket();
       if (typeof newTicketId == "number") {
-        router.push({ pathname: '/ticket/[id]', params: { id: newTicketId, name: '', date: "" } })
+        router.push({
+          pathname: '/ticket/[id]',
+          params: {
+            id: newTicketId,
+            name: '',
+            date: ""
+          }
+        })
       } else {
         console.log("Ошибка создания нового чека")
       }
@@ -57,7 +78,7 @@ export default function Index() {
   };
 
   const routeScanner = () => {
-        router.push({ pathname: '/scanner'})
+    router.push({ pathname: '/scanner' })
   };
 
   const clearDB = () => {
@@ -73,7 +94,8 @@ export default function Index() {
   // Мемоизация snapPoints с учетом высоты контейнера и контента
   const snapPoints = useMemo(() => {
     const minHeight = containerHeight - contentHeight - Sizes.mainContainerPaddingTop > 0 ?
-      containerHeight - contentHeight - Sizes.mainContainerPaddingTop - 20 : "20%"; // Разница между высотой контейнера и высотой контента
+      // Разница между высотой контейнера и высотой контента
+      containerHeight - contentHeight - Sizes.mainContainerPaddingTop - 20 : "20%";
     return [minHeight, "95%"]; // Мин. высота + 90% от высоты экрана
   }, [contentHeight, containerHeight]); // Запуск при изменении высоты контента или контейнера
 

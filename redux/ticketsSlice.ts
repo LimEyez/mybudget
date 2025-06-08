@@ -19,7 +19,7 @@ const fetchTickets = createAsyncThunk(
     "tickets/fetchTickets",
     async ({dates, DB} :{dates : Dates, DB: DataBase}) => {
         try {
-            const tickets = await DB.getTickets(dates.startDate, dates.endDate || false);
+            const tickets = (await DB.getTickets(dates.startDate, dates.endDate || false))
             const amount = tickets.reduce((sum, ticket : Ticket) => {
                 sum += ticket.amount;
                 return sum;

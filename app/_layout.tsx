@@ -47,7 +47,7 @@ export default function RootLayout() {
       <Provider store={store}>
         <NativeStack
           screenOptions={{ 
-            // animation: "slide_from_right", 
+            animation: "slide_from_right", 
             statusBarStyle: 'dark',
             // animationDuration: 100
             

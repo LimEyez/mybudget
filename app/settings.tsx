@@ -9,11 +9,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Button, Modal, Platform, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
-import { GestureHandlerRootView, RectButton } from "react-native-gesture-handler";
-import * as Sharing from "expo-sharing";
-import * as FileSystem from "expo-file-system"
-import * as DocumentPicker from "expo-document-picker"
+import { Button, Modal, Platform, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { GestureHandlerRootView, RectButton, TextInput } from "react-native-gesture-handler";
+import { XlsxExporter } from "@/services/XlsxExporter";
+import LoadingModal from "@/components/ui/LoadingModal";
+import Animated, { LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { getHeightWindow } from "@/constants/sizes";
+import ModalMessage, { ModalMessageInterface } from "@/components/ui/ModalMessage";
 
 export default function settings({ route }: { route: any }) {
 
@@ -22,10 +24,13 @@ export default function settings({ route }: { route: any }) {
     const [dateMonth, setDateMonth] = useState<string>(date);
     const [budgetMonth, setBudgetMonth] = useState<string>(budget.toString());
     const [defaultBudget, setDefaultBudget] = useState<string>('0');
+    const [saveProcess, setSaveProcess] = useState<boolean>(false);
+    const [modalMessage, setModalMessage] = useState<string>('');
+    const [backgroundColorModal, setBackgroundColorModal] = useState<string>(Colors.red);
 
     const refDefaultBudgetInput = useRef<TextInput>(null)
     const refMonthBudgetInput = useRef<TextInput>(null)
-    const refBudgetMonth = useRef<TextInput>(null);
+    const refModalMessage = useRef<ModalMessageInterface>(null);
 
     const DB = new DataBase(useSQLiteContext());
 
@@ -38,90 +43,47 @@ export default function settings({ route }: { route: any }) {
         getDefaultBudget();
     }, [date])
 
-    // const importDB = async () => {
-    //     try {
-    //     const result = await DocumentPicker.getDocumentAsync({
-    //         copyToCacheDirectory: true,
-    //         type: ['application/x-sqlite3', 'application/octet-stream', 'public.database']
-    //     });
-    //     if (result.canceled || !result.assets || result.assets.length == 0) {
-    //         console.log("Выбор файла отменен");
-    //         return;
-    //     }
-    //     const file = result.assets[0];
+    const exportDB = async () => {
+        function showLoading() {
+            setSaveProcess(true);
+            opacityLoader.value = 1;
+        }
+        function removeLoading() {
+            setTimeout(() => {
+                opacityLoader.value = 0;
+                setSaveProcess(false);
+                showModalMessage();
+            }, 500)
+        }
+        try {
+            showLoading();
+            const xlsxExporter = new XlsxExporter();
+            await xlsxExporter.initDB();
+            const resExport = await xlsxExporter.exportAll();
+            if (resExport instanceof Error) {
+                setModalMessage(resExport.message);
+                setBackgroundColorModal(Colors.red);
+            } else {
+                setModalMessage(resExport);
+                setBackgroundColorModal(Colors.blue);
+            }
+            showModalMessage();
+            removeLoading();
+        }
+        // await Sharing.shareAsync(dbPath);
+        catch (error) {
+            setModalMessage("Ошибка сохранения .xlsx файла");
+            setBackgroundColorModal(Colors.red);
+            showModalMessage();
+            removeLoading();
+            console.log("Ошибка при экспорте:", error);
+        }
+    }
 
-    //     // if (!file.name.endsWith('.db')) {
-    //     //     console.warn("Выбранный файл не является файлом базы данных");
-    //     //     return;
-    //     // }
-
-    //     if (!(await FileSystem.getInfoAsync(FileSystem.documentDirectory + "SQLite")).exists) {
-    //         await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "SQLite", {intermediates: true});
-    //     }
-    //     const base64 = await FileSystem.readAsStringAsync(
-    //         file.uri,
-    //         {encoding: FileSystem.EncodingType.Base64}
-    //     );
-
-    //     // console.log(base64)
-    //     await FileSystem.writeAsStringAsync(
-    //         FileSystem.documentDirectory + "SQLite/MyBudgetDatabase.db", 
-    //         base64,
-    //         {encoding: FileSystem.EncodingType.Base64}
-    //     );
-    //     await DB.closeDB();
-    //     await DB.getLinkDB();
-    //     const allTikcets = await DB.getAllTickets()
-    //     console.log(allTikcets)
-    // } catch(error) {
-    //     console.log("Ошибка импорта базы данных: ", error)
-    // }
-    // }
-
-    // const exportDB = async () => {
-    //     if (Platform.OS === "android") {
-
-    //         try {
-    //             // Проверяем, есть ли уже сохранённый путь
-    //             let directoryUri = await AsyncStorage.getItem('MyBudgetDirectoryUri');
-    //             if (!directoryUri) {
-    //                 const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
-    //                 if (!permissions.granted) {
-    //                     console.log("Отсутствует доступ к файлам!");
-    //                     return;
-    //                 }
-    //                 directoryUri = permissions.directoryUri;
-    //                 await AsyncStorage.setItem('MyBudgetDirectoryUri', directoryUri);
-    //             }
-        
-    //             // Читаем файл из SQLite
-    //             const dbPath = FileSystem.documentDirectory + 'SQLite/MyBudgetDatabase.db';
-    //             const base64 = await FileSystem.readAsStringAsync(dbPath, {
-    //                 encoding: FileSystem.EncodingType.Base64
-    //             });
-    //             // console.log(base64)
-    //             // Создаём новый файл в выбранной папке
-    //             const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
-    //                 directoryUri, 'MyBudgetDatabase', 'application/octet-stream'
-    //             );
-    
-    //             // Записываем данные в файл
-    //             await FileSystem.writeAsStringAsync(fileUri, base64, { encoding: FileSystem.EncodingType.Base64 });
-    
-    //             console.log("Файл успешно экспортирован в:", fileUri);
-    //         } catch (error) {
-    //             console.error("Ошибка при экспорте БД:", error);
-    //         }
-    //     } else {
-    //         const dbPath = FileSystem.documentDirectory + 'SQLite/MyBudgetDatabase.db';
-    //         await Sharing.shareAsync(dbPath);
-    //     }
-    // };
-
-    // const exportDB = async () => {
-    //         const dbPath = FileSystem.documentDirectory + 'SQLite/MyBudgetDatabase';
-    //         await Sharing.shareAsync(dbPath);
-    // }
+    const opacityLoader = useSharedValue(0);
+    const loadingScreenAnimatedStyle = useAnimatedStyle(() => { return { 
+        opacity: withTiming(opacityLoader?.value, { duration: 300 })
+    } })
 
     const styles = StyleSheet.create({
         container: {
@@ -182,21 +144,35 @@ export default function settings({ route }: { route: any }) {
             alignItems: "center",
             height: 50,
         },
-        importButton: {
-
+        loadingContainer: {
+            ...StyleSheet.absoluteFillObject,
+            height: getHeightWindow(),
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: 15,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
         },
-        exportButton: {
-
-        }
     })
+
+    function showModalMessage() {
+        setTimeout(() => {
+            refModalMessage.current?.showMessage();
+        }, 100);
+    }
 
     async function saveDefaultBudget(budget: string = defaultBudget.toString()) {
         await setDefaultMonthBudget(Number(budget));
         getDefaultBudget();
+        setModalMessage("Бюджет по умолчанию успешно сохранен");
+        setBackgroundColorModal(Colors.blue);
+        showModalMessage();
     }
 
     async function saveMonthBudget() {
         const res = await DB.setMonthBudget(date, Number(budgetMonth));
+        setModalMessage(`Бюджет для ${date} успешно сохранен сохранен`);
+        setBackgroundColorModal(Colors.blue);
+        showModalMessage();
     }
 
     return (
@@ -206,8 +182,8 @@ export default function settings({ route }: { route: any }) {
                     <Text style={[BasicStyles.fontSemiBold, BasicStyles.shadowElements, styles.textTitle]}>Бюджет по умолчанию:</Text>
                     <CustomInput
                         ref={refDefaultBudgetInput}
-                        fixedNum={2}
                         defaultValue={defaultBudget}
+                        fixedNum={2}
                         saveValueFunction={(text: string) => { setDefaultBudget(text) }}
                         mainContainerStyle={[BasicStyles.border, BasicStyles.shadowElements, , styles.inputTextContainer]}
                         inputStyle={[styles.inputText]}
@@ -217,51 +193,75 @@ export default function settings({ route }: { route: any }) {
                     />
                 </View>
                 <View style={[BasicStyles.border, BasicStyles.shadowElements, styles.containerBlock, styles.buttonContainer]}>
-                    <Button color={Colors.blue} title="Сохранить" onPress={() => saveDefaultBudget()} />
+                <RectButton
+                        style={[
+                            BasicStyles.border,
+                            BasicStyles.shadowElements,
+                            styles.fileFunctionButton,
+                        ]}
+                        onPress={() => {saveDefaultBudget()}}
+                    >
+                        <Text style={[BasicStyles.fontSemiBold, styles.textTitle, { color: Colors.red }]}>Сохранить</Text>
+                    </RectButton>
                 </View>
                 <View style={[BasicStyles.border, styles.containerBlock]}>
-                    <Text style={[BasicStyles.fontSemiBold, BasicStyles.shadowElements, styles.textTitle]}>Бюджет на {MonthToNameMonth[dateMonth.slice(-2) as keyof typeof MonthToNameMonth].toLowerCase()} {dateMonth.slice(0, 4)}</Text>
+                    <Text style={[BasicStyles.fontSemiBold, BasicStyles.shadowElements, styles.textTitle]}>
+                        Бюджет на {MonthToNameMonth[dateMonth.slice(-2) as keyof typeof MonthToNameMonth].toLowerCase()} {dateMonth.slice(0, 4)}</Text>
                     <CustomInput
-                        ref={refBudgetMonth}
-                        fixedNum={2}
+                        ref={refMonthBudgetInput}
                         defaultValue={budgetMonth}
+                        fixedNum={2}
                         saveValueFunction={(text: string) => { setBudgetMonth(text) }}
                         mainContainerStyle={[BasicStyles.border, BasicStyles.shadowElements, , styles.inputTextContainer]}
                         inputStyle={[styles.inputText]}
                         symbolCurrencyStyle={[styles.textRuble]}
+                        showSymbolCurrency={true}
                         justAText={false}
                     />
                 </View>
                 <View style={[BasicStyles.border, BasicStyles.shadowElements, styles.containerBlock, styles.buttonContainer]}>
-                    <Button color={Colors.blue} title="Сохранить" onPress={saveMonthBudget} />
+                    <RectButton
+                        style={[
+                            BasicStyles.border,
+                            BasicStyles.shadowElements,
+                            styles.fileFunctionButton,
+                        ]}
+                        onPress={saveMonthBudget}
+                    >
+                        <Text style={[BasicStyles.fontSemiBold, styles.textTitle, { color: Colors.red }]}>Сохранить</Text>
+                    </RectButton>
                 </View>
-            </SafeAreaView>
                 <View style={[styles.fileFunctionButtonContainer]}>
-
                     <RectButton
                         style={[
                             BasicStyles.border,
                             BasicStyles.shadowElements,
                             styles.fileFunctionButton,
-                            styles.exportButton
                         ]}
-                        // onPress={exportDB}
+                        onPress={exportDB}
                     >
-                        <Text style={[BasicStyles.fontSemiBold, styles.textTitle, {color: Colors.red}]}>Экспорт чеков</Text>
-                    </RectButton>
-                    <RectButton
-                        style={[
-                            BasicStyles.border,
-                            BasicStyles.shadowElements,
-                            styles.fileFunctionButton,
-                            styles.fileFunctionButton,
-                            styles.importButton,
-                        ]}
-                        // onPress={importDB}
-                    >
-                        <Text style={[BasicStyles.fontSemiBold, styles.textTitle, {color: Colors.red}]}>Импорт чеков</Text>
+                        <Text style={[BasicStyles.fontSemiBold, styles.textTitle, { color: Colors.red }]}>Экспорт чеков</Text>
                     </RectButton>
                 </View>
+                {
+                    saveProcess &&
+                    <Animated.View
+                    layout={LinearTransition}
+                    style={[
+                        styles.loadingContainer,
+                        loadingScreenAnimatedStyle
+                    ]}
+                    >
+                    <LoadingModal showLoader={saveProcess} />
+                </Animated.View>
+                }
+            </SafeAreaView>
+            <ModalMessage
+                text={modalMessage}
+                backgroundColor={backgroundColorModal}
+                ref={refModalMessage}
+            >
+            </ModalMessage>
         </GestureHandlerRootView>
 
     )

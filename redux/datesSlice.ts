@@ -2,17 +2,27 @@ import { Dates } from "@/constants/interfaces/Dates";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { format } from "date-fns";
 
+// const startAndEndDates = (() => {
+//     const nowDate = format(Date.now(), "yyyy-MM-dd");
+//     const date = new Date(nowDate);
+//     const startDate = new Date(date.getFullYear(), date.getMonth(), 1);
+//     const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+//     return {
+//         startDate: format(startDate, "yyyy-MM-dd"),
+//         endDate: format(endDate, "yyyy-MM-dd")
+//     }
+// })();
+
 const startAndEndDates = (() => {
-    const nowDate = format(Date.now(), "yyyy-MM-dd");
-    const date = new Date(nowDate);
-    const startDate = new Date(date.getFullYear(), date.getMonth(), 1);
-    const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    const date = new Date(); // текущая дата ЛОКАЛЬНО
+    const startDate = new Date(date.getFullYear(), date.getMonth(), 1); // начало месяца
+    const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0); // конец месяца
+
     return {
         startDate: format(startDate, "yyyy-MM-dd"),
         endDate: format(endDate, "yyyy-MM-dd")
-    }
+    };
 })();
-
 const initialState = {
     dates: startAndEndDates
 };

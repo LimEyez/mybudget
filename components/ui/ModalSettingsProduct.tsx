@@ -9,7 +9,7 @@ import { RefObject, useEffect, useRef, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, TouchableWithoutFeedback, View } from "react-native";
 import { GestureHandlerRootView, TextInput } from "react-native-gesture-handler";
 import { useDispatch, useSelector } from "react-redux";
-import Animated, { FadeIn, FadeInDown, FadeInUp, LinearTransition, ZoomIn, ZoomInDown } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, FadeInUp, LinearTransition, Easing, useAnimatedStyle, useSharedValue, withTiming, ZoomIn, ZoomInDown, FadeOut, ZoomOut } from "react-native-reanimated";
 import CustomInput from "./CustomInput";
 import { useFocusEffect } from "expo-router";
 
@@ -48,7 +48,7 @@ export default function ModalProductSettings({ showProductSettings, setShowProdu
         },
         modalContainer: {
             flex: 1,
-            zIndex: 1000
+            zIndex: 1000,
         },
         modalContentContainer: {
             flex: 1,
@@ -123,6 +123,8 @@ export default function ModalProductSettings({ showProductSettings, setShowProdu
         setShowProductSettings(false);
     };
 
+    
+
     const onConfirmSetting = async () => {
         if (name == "") {
             setErrorMessage("Введите наименование товара");
@@ -157,7 +159,7 @@ export default function ModalProductSettings({ showProductSettings, setShowProdu
             setAmount(newAmount);
         }
     }, [quantity, price]);
-    
+
     useEffect(() => {
         if (infoProduct != null) {
             setName(infoProduct.name);
@@ -176,86 +178,91 @@ export default function ModalProductSettings({ showProductSettings, setShowProdu
         setAmount(amount_number.toFixed(2));
     }
 
+    if (!showProductSettings) return null;
 
     return (
-        <GestureHandlerRootView>
-            <Modal onRequestClose={onCancelSetting} statusBarTranslucent={true} transparent={true} style={styles.modalContainer} animationType="fade" visible={showProductSettings}>
-                <TouchableWithoutFeedback>
-                    <View style={styles.modalContentContainer} >
-                        <Animated.View
-                            entering={ZoomIn.delay(100)}
-                            layout={LinearTransition}
-                            style={[BasicStyles.border, BasicStyles.shadowElements, styles.content]}
-                        >
-                            <Text style={[BasicStyles.fontSemiBold, BasicStyles.shadowElements, styles.text]}>Наименование товара</Text>
-                            <CustomInput
-                                ref={refName}
-                                fixedNum={0}
-                                // onFocus={() => {refName.current?.focus()}}
-                                defaultValue={name}
-                                justAText={true}
-                                saveValueFunction={(text: string) => { setName(text) }}
-                                mainContainerStyle={[BasicStyles.border, BasicStyles.shadowElements, styles.textInput]}
-                                inputStyle={[styles.textStyle]}
-                                symbolCurrencyStyle={[styles.textStyle]}
-                            />
-                            <Text style={[BasicStyles.fontSemiBold, styles.text]}>Количество товара</Text>
-                            <CustomInput
-                                ref={refQuantity}
-                                fixedNum={3}
-                                // onFocus={() => {refQuantity.current?.focus()}}
-                                defaultValue={quantity}
-                                justAText={false}
-                                saveValueFunction={(text: string) => { setQuantity(text); updateAmount() }}
-                                mainContainerStyle={[BasicStyles.border, BasicStyles.shadowElements, styles.textInput]}
-                                inputStyle={[styles.textStyle]}
-                                symbolCurrencyStyle={[styles.textStyle]}
-                            />
-                            <Text style={[BasicStyles.fontSemiBold, styles.text]}>Цена товара</Text>
-                            <CustomInput
-                                ref={refPrice}
-                                defaultValue={price}
-                                // onFocus={() => {refPrice.current?.focus(); console.log("EW")}}
-                                justAText={false}
-                                fixedNum={2}
-                                saveValueFunction={(text: string) => { setPrice(text); updateAmount() }}
-                                mainContainerStyle={[BasicStyles.border, BasicStyles.shadowElements, styles.textInput]}
-                                inputStyle={[styles.textStyle]}
-                                symbolCurrencyStyle={[styles.textStyle]}
-                            />
-                            <Text style={[BasicStyles.fontSemiBold, styles.text]}>Стоимость</Text>
-                            <CustomInput
-                                ref={refAmount}
-                                defaultValue={amount}
-                                justAText={true}
-                                fixedNum={2}
-                                mainContainerStyle={[BasicStyles.border, BasicStyles.shadowElements, styles.textInput]}
-                                inputStyle={[styles.textStyle]}
-                                symbolCurrencyStyle={[styles.textStyle]}
-                                readonly={true}
-                            />
-                            <View style={styles.buttonsContainer}>
-                                <View style={styles.cancelButtonContainer}>
-                                    <Pressable onPressOut={onCancelSetting}>
-                                        <Text style={[styles.cancelButtonText]}>Отмена</Text>
-                                    </Pressable>
-                                </View>
-                                <View style={styles.confirmButtonContainer}>
-                                    <Pressable onPressOut={onConfirmSetting}>
-                                        <Text style={[styles.confirmButtonText]}>Сохранить</Text>
-                                    </Pressable>
-                                </View>
+        <GestureHandlerRootView style={{ position: 'absolute', width: '100%', height: '100%' }}>
+            <Animated.View style={[styles.modalContainer]} entering={FadeIn} exiting={FadeOut}>
+                <Animated.View style={[styles.modalContentContainer]}>
+
+                    <Animated.View
+                        // entering={ZoomIn.delay(100)}
+                        // layout={LinearTransition}
+                        entering={ZoomIn}
+                        exiting={ZoomOut}
+                        style={[BasicStyles.border, BasicStyles.shadowElements, styles.content]}
+                    >
+                        <Text style={[BasicStyles.fontSemiBold, BasicStyles.shadowElements, styles.text]}>Наименование товара</Text>
+                        <CustomInput
+                            ref={refName}
+                            fixedNum={0}
+                            // onFocus={() => {refName.current?.focus()}}
+                            defaultValue={name}
+                            justAText={true}
+                            saveValueFunction={(text: string) => { setName(text) }}
+                            mainContainerStyle={[BasicStyles.border, BasicStyles.shadowElements, styles.textInput]}
+                            inputStyle={[styles.textStyle]}
+                            symbolCurrencyStyle={[styles.textStyle]}
+                        />
+                        <Text style={[BasicStyles.fontSemiBold, styles.text]}>Количество товара</Text>
+                        <CustomInput
+                            ref={refQuantity}
+                            fixedNum={3}
+                            // onFocus={() => {refQuantity.current?.focus()}}
+                            defaultValue={quantity}
+                            justAText={false}
+                            showSymbolCurrency={false}
+                            saveValueFunction={(text: string) => { setQuantity(isNaN(Number(text)) ? '0' : text); updateAmount() }}
+                            mainContainerStyle={[BasicStyles.border, BasicStyles.shadowElements, styles.textInput]}
+                            inputStyle={[styles.textStyle]}
+                            symbolCurrencyStyle={[styles.textStyle]}
+                        />
+                        <Text style={[BasicStyles.fontSemiBold, styles.text]}>Цена товара</Text>
+                        <CustomInput
+                            ref={refPrice}
+                            defaultValue={price}
+                            // onFocus={() => {refPrice.current?.focus(); console.log("EW")}}
+                            justAText={false}
+                            fixedNum={2}
+                            saveValueFunction={(text: string) => { setPrice(isNaN(Number(text)) ? '0' : text); updateAmount() }}
+                            mainContainerStyle={[BasicStyles.border, BasicStyles.shadowElements, styles.textInput]}
+                            inputStyle={[styles.textStyle]}
+                            symbolCurrencyStyle={[styles.textStyle]}
+                        />
+                        <Text style={[BasicStyles.fontSemiBold, styles.text]}>Стоимость</Text>
+                        <CustomInput
+                            ref={refAmount}
+                            defaultValue={amount}
+                            justAText={false}
+                            fixedNum={2}
+                            mainContainerStyle={[BasicStyles.border, BasicStyles.shadowElements, styles.textInput]}
+                            inputStyle={[styles.textStyle]}
+                            symbolCurrencyStyle={[styles.textStyle]}
+                            showSymbolCurrency={true}
+                            readonly={true}
+                        />
+                        <View style={styles.buttonsContainer}>
+                            <View style={styles.cancelButtonContainer}>
+                                <Pressable onPressOut={onCancelSetting}>
+                                    <Text style={[styles.cancelButtonText]}>Отмена</Text>
+                                </Pressable>
                             </View>
-                        </Animated.View >
+                            <View style={styles.confirmButtonContainer}>
+                                <Pressable onPressOut={onConfirmSetting}>
+                                    <Text style={[styles.confirmButtonText]}>Сохранить</Text>
+                                </Pressable>
+                            </View>
+                        </View>
                         {
-                            errorMessage &&
-                            <View style={[BasicStyles.border, BasicStyles.shadowElements, styles.popup]}>
-                                <Text style={[BasicStyles.fontSemiBold, styles.text]}>{errorMessage}</Text>
-                            </View>
-                        }
-                    </View>
-                </TouchableWithoutFeedback>
-            </Modal>
+                        errorMessage &&
+                        <View style={[BasicStyles.border, BasicStyles.shadowElements, styles.popup]}>
+                            <Text style={[BasicStyles.fontSemiBold, styles.text]}>{errorMessage}</Text>
+                        </View>
+                    }
+                    </Animated.View >
+                </Animated.View>
+            </Animated.View>
         </GestureHandlerRootView>
     )
+
 }

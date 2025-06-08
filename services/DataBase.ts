@@ -98,16 +98,49 @@ class DataBase {
         }
     }
 
+    async getAllProductsGroupedByTicket() {
+        try {
+            const allTickets = await this.db.getAllAsync<{ticketId: number, ticketInfo: string, products: string}>(`
+                SELECT p.ticketId, 
+                    json_object(
+                        'id', t.id,
+                        'name', t.name, 
+                        'date', t.date, 
+                        'amount', t.amount
+                    ) AS ticketInfo,
+                    json_group_array(
+                        json_object(
+                            'id', p.id, 
+                            'name', p.name, 
+                            'quantity', p.quantity, 
+                            'price', p.price, 
+                            'amount', p.amount
+                        )
+                    ) AS products 
+                FROM products p
+                JOIN tickets t ON p.ticketId = t.id 
+                GROUP BY p.ticketId;
+            `);
+            return allTickets;
+        } catch (error) {
+            console.log('Ошибка получения данных');
+            console.log(error);
+            return ([])
+        }
+    }
+
     async getAllTickets() {
         try {
-            const allTickets = await this.db.getAllAsync<Product>(`SELECT * FROM tickets`);
-            console.log(allTickets);
+            const allTickets = await this.db.getAllAsync<Ticket>(`SELECT * FROM tickets`);
+            // console.log(allTickets);
+            return allTickets;
         } catch (error) {
             console.log('Ошибка товаров');
             console.log(error);
             return ([])
         }
     }
+
 
     async addProduct(ticketId: number | null | undefined, name: string, quantity: number, price: number, amount: number) {
         try {
@@ -266,7 +299,7 @@ class DataBase {
     async setMonthBudget(date: string, budget?: number | null) {
         if (budget == null || budget == undefined) {
             budget = await getDefaultMonthBudget();
-        }    
+        }
         try {
             const result = await this.db.runAsync(
                 `INSERT INTO monthBudgets (date, budget) VALUES (?, ?)`,
@@ -284,7 +317,7 @@ class DataBase {
             }
         }
     }
-    
+
 
     async updateMonthBudget(date: string, budget?: number | null) {
         if (budget == null || budget == undefined) {
@@ -311,16 +344,6 @@ class DataBase {
             return result;
         } catch (error) {
             console.log("Ошибка получения месячных бюджетов: ", error)
-            return null;
-        }
-    }
-
-    async deleteMonthBudget(date: string) {
-        try {
-            const result = await this.db.runAsync(`DELETE FROM tickets WHERE date = ?`, date);
-            return result;
-        } catch (error) {
-            console.log("Ошибка удаления месячного бюджета ", error)
             return null;
         }
     }

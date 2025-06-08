@@ -25,7 +25,7 @@ export default function DateContainer({ title }: { title: string }) {
     return (
         <Animated.View 
             style={styles.containerDate} 
-            entering={FadeInDown.delay(100)}
+            entering={FadeInDown.delay(25)}
             exiting={FadeOut}
             layout={LinearTransition}>
             <Text style={[styles.dateTextContainer, BasicStyles.fontSemiBold]}>{title}</Text>

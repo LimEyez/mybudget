@@ -38,9 +38,8 @@ const CustomInput = forwardRef<TextInput, CustomInputInterface>(
         useImperativeHandle(ref, () => internalRef.current!, [internalRef]);
 
         const [textInputWidth, setTextInputWidth] = useState(0);
-
         const [value, setValue] = useState<string>(defaultValue);
-        const [len, setLen] = useState<number>(defaultValue.length);
+        const [len, setLen] = useState<number>(value.length);
         const [cursorPos, setCursorPos] = useState<number>(1)
 
         const styles = StyleSheet.create({
@@ -81,6 +80,7 @@ const CustomInput = forwardRef<TextInput, CustomInputInterface>(
         }
 
         function changeTextJustAText(text: string) {
+            setLen(text.length)
             saveValueFunction(text);
         }
 
@@ -117,19 +117,38 @@ const CustomInput = forwardRef<TextInput, CustomInputInterface>(
             saveValueFunction(value);
         }
 
+        function handleBlur(){
+            if (!justAText) {
+                setValue(parseFloat(value).toString());
+            }
+          };
+
         useEffect(() => {
             saveValueFunction(value);
         }, [value])
 
         useEffect(() => {
             setLen(defaultValue.length)
-            setValue(defaultValue);
+            if (!justAText && readonly) {
+                setValue(parseFloat(defaultValue).toString());
+            } else {
+                setValue(defaultValue);
+            }
         }, [defaultValue])
 
+        
 
         if (justAText) {
             return (
-                <View style={[styles.container, mainContainerStyle]}>
+                <TouchableOpacity 
+                    style={[styles.container, mainContainerStyle]}
+                    onPress={() => {
+                        setCursorPos(len)
+                        internalRef.current?.blur(); 
+                        internalRef.current?.focus();
+                        }}
+                        disabled={readonly}  
+                >
                     <TextInput
                         ref={internalRef}
                         defaultValue={value}
@@ -141,15 +160,23 @@ const CustomInput = forwardRef<TextInput, CustomInputInterface>(
                         onSubmitEditing={onSubmitEditingJustAText}
                         readOnly={readonly}
                     />
-                </View>
+                </TouchableOpacity>
             )
         }
 
         return (
-            <TouchableOpacity  disabled={readonly} onPress={() => {internalRef.current?.focus()}} style={[styles.container, mainContainerStyle]}>
+            <TouchableOpacity  
+                disabled={readonly} 
+                onPress={() => {
+                    // setLen(Number(defaultValue).toString().length)
+                    setCursorPos(len);
+                    internalRef.current?.blur(); 
+                    internalRef.current?.focus();
+                    }} 
+                style={[styles.container, mainContainerStyle]}>
                 <TextInput
                     ref={internalRef}
-                    value={value}
+                    value={isNaN(Number(value)) ? '0' : value}
                     style={[styles.textInput, inputStyle]}
                     placeholder={"0"}
                     maxLength={len}
@@ -160,6 +187,8 @@ const CustomInput = forwardRef<TextInput, CustomInputInterface>(
                     selection={{ start: cursorPos, end: cursorPos }}
                     onSubmitEditing={() => {onSubmitEditing(); internalRef.current?.blur()}}
                     readOnly={readonly}
+                    onBlur={() => handleBlur()}
+                    keyboardType={!justAText ? "number-pad" : "default"}
                 />
                 {
                     showSymbolCurrency &&
