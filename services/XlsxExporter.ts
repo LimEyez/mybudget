@@ -162,7 +162,7 @@ class XlsxExporter {
         ws['I1'] = { v: "Месячный бюджет:", t: "s", s: this.addStyleCell() };
         ws['J1'] = { v: budget, t: "n", s: this.addStyleCell() };
         ws['I2'] = { v: "Сумма расходов:", t: "s", s: this.addStyleCell() };
-        ws['J2'] = { f: `SUM(F2:${ws["!ref"]?.split(':')[1]})`, t: "n", s: this.addStyleCell() };
+        ws['J2'] = { f: `SUM(F2:F${ws["!ref"]?.split(':')[1]?.slice(1)})`, t: "n", s: this.addStyleCell() };
         ws['I3'] = { v: "Остаток:", t: "s", s: this.addStyleCell() };
         ws['J3'] = { f: `J1-J2`, t: "n", s: this.addStyleCell() };
         let startIndex = 0;
