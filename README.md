@@ -1,50 +1,31 @@
-# Welcome to your Expo app 👋
+Start:
+1) npm install
+2) npx expo start
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+# Макеты приложения (итоговая стилистика приложения может незначительно отличаться)
 
-## Get started
+## Главный экран
+![Главный экран](screenShots/Главный%20экран.jpg)
 
-1. Install dependencies
+## Экран сканирования QR-кода чека
+![Экран сканирования QR-кода чека](screenShots/Экран%20сканирования%20QR-кода%20чека.jpg)
 
-   ```bash
-   npm install
-   ```
+## Экран развернутого списка чеков
+![Экран развернутого списка чеков](screenShots/Экран%20развернутого%20списка%20чеков.jpg)
 
-2. Start the app
+![Экран развернутого списка чеков PNG](screenShots/Экран%20развернутого%20списка%20чеков.png)
 
-   ```bash
-    npx expo start
-   ```
+### Жест удаления чека
+![Экран развернутого списка чеков (жест удаления чека)](screenShots/Экран%20развернутого%20списка%20чеков%20(жест%20удаления%20чека).jpg)
 
-In the output, you'll find options to open the app in a
+## Экран развернутого чека
+![Экран развернутого чека](screenShots/Экран%20развернутого%20чека.jpg)
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Жест удаления товара из чека
+![Экран развернутого чека (жест удаления товара)](screenShots/Экран%20развернутого%20чека%20(жест%20удаления%20товара).jpg)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Изменение информации товара в чеке
+![изменения информации товара в чек(-е)](screenShots/изменения%20информации%20товара%20в%20чек(-е).jpg)
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Настройка временного промежутка для показа чеков
+![Экран настройки промежутка времени для показа чеков](screenShots/Экран%20настройки%20промежутка%20времени%20для%20показа%20чеков.jpg)
